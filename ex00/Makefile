@@ -3,7 +3,8 @@ GREEN = \033[0;32m
 YELLOW = \033[0;33m
 RESET = \033[0m
 
-SRC = src/main.cpp
+SRC = src/main.cpp \
+	  src/Date.cpp
 
 NAME = btc
 

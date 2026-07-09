@@ -1,5 +1,4 @@
-#include "../includes/Date.hpp"
-
+#include "Date.hpp"
 
 bool Date::isLeapYear(int year)
 {
@@ -25,7 +24,7 @@ int Date::getDaysInMonth(int month, int year)
 }
 
 
-Date::Date(void) : Year(1970), Month(1), Day(1)
+Date::Date(void) : Year(1984), Month(1), Day(1)
 {
 }
 
