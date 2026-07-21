@@ -7,6 +7,7 @@
 struct VElement
 {
 	std::vector<int>::const_iterator value;
+	VElement* winner;
     std::vector<VElement*> defeated;
 } ;
 
@@ -32,7 +33,8 @@ private:
     std::vector<int> resVec;
     std::list<int> resLis;
 
-	VElement *TournamentBracket();
+	std::vector<VElement*> PmergeMe::Pairing(std::vector<VElement*>& current);
+	VElement* TournamentBracket(std::vector<VElement*>& current);
 };
 
 #endif
