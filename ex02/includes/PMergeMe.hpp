@@ -7,17 +7,17 @@
 
 struct VElement
 {
-	std::vector<int>::const_iterator value;
-	VElement* winner;
-	VElement* previousWinner;
+    std::vector<int>::const_iterator value;
+
+    VElement* looser;
+
     std::vector<VElement*> defeated;
-} ;
+};
 
 struct LElement
 {
 	const std::list<int>::iterator value;
-	LElement* winner;
-	LElement* previousWinner;
+	LElement* looser;
     std::list<LElement*> defeated;
 } ;
 

@@ -35,30 +35,47 @@ std::vector<VElement*> PmergeMe::Pairing(std::vector<VElement*>& current)
         VElement* first = current[i];
         VElement* second = current[i + 1];
 
+
         if (*(first->value) >= *(second->value))
         {
-            // first defeated second or is strictly equal if I do not use sets
+            // first wins
+            first->looser = second;
+
             first->defeated.push_back(second);
-            second->winner = first;
-			first->previousWinner = second;
+
+            // absorb second's history
+            for (std::vector<VElement*>::iterator it = second->defeated.begin();
+                 it != second->defeated.end();
+                 ++it)
+            {
+                first->defeated.push_back(*it);
+            }
 
             winners.push_back(first);
         }
         else
         {
-            // second defeated first, so it should get swallowed and not who beat him
+            // second wins
+            second->looser = first;
+
             second->defeated.push_back(first);
-            first->winner = second;
-			second->previousWinner = first;
+
+            // absorb first's history
+            for (std::vector<VElement*>::iterator it = first->defeated.begin();
+                 it != first->defeated.end();
+                 ++it)
+            {
+                second->defeated.push_back(*it);
+            }
+
             winners.push_back(second);
         }
     }
 
-    // Odd element: no fight, no winner, the one nobody wants
-    if (current.size() % 2 != 0)
-    {
+
+    // odd element
+    if (current.size() % 2)
         winners.push_back(current.back());
-    }
 
     return winners;
 }
@@ -81,23 +98,28 @@ VElement* PmergeMe::TournamentBracket(std::vector<VElement*>& current)
     return TournamentBracket(winners);
 }
 
-void PmergeMe::extractChain(VElement* node, std::vector<VElement*>& mainChain, std::vector<VElement*>& pending)
+void PmergeMe::extractChain(
+    VElement* winner,
+    std::vector<VElement*>& mainChain,
+    std::vector<VElement*>& pending)
 {
-    if (node == NULL)
+    if (!winner)
         return;
 
-    mainChain.push_back(node);
 
-    for (std::vector<VElement*>::iterator it = node->defeated.begin();
-         it != node->defeated.end();
+    mainChain.push_back(winner);
+
+
+    if (winner->looser)
+        pending.push_back(winner->looser);
+
+
+    for (std::vector<VElement*>::iterator it = winner->defeated.begin();
+         it != winner->defeated.end();
          ++it)
     {
-        VElement* loser = *it;
-
-        if (loser->defeated.empty())
-            pending.push_back(loser);
-        else
-            extractChain(loser, mainChain, pending);
+        if (*it != winner->looser)
+            pending.push_back(*it);
     }
 }
 
@@ -226,7 +248,8 @@ void PmergeMe::sort()
     std::cout << std::endl;
 	
 	//Vec sorting
-	std::time_t now = std::time(NULL);
+	{
+	clock_t start = clock();
 
 	std::vector<VElement> pairs(this->Vec.size());
 
@@ -235,8 +258,7 @@ void PmergeMe::sort()
     for (std::size_t i = 0; i < this->Vec.size(); i++, vecIt++)
     {
         pairs[i].value = vecIt;
-		pairs[i].winner = NULL;
-		pairs[i].previousWinner = NULL;
+		pairs[i].looser = NULL;
 		pairs[i].defeated.clear();
     }
 	std::vector<VElement*> current;
@@ -256,5 +278,18 @@ void PmergeMe::sort()
     	std::cout << "Vector is sorted correctly" << std::endl;
 	else
     	std::cout << "ERROR: Vector is not sorted" << std::endl;
-    (void)now;
+    clock_t end = clock();
+
+	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+
+	std::cout << "Time to sort: " << elapsed * 1000000 << " us" << std::endl;
+	}
+	//List sorting
+	clock_t start = clock();
+	
+	clock_t end = clock();
+
+	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+
+	std::cout << "Time to sort: " << elapsed * 1000000 << " us" << std::endl;
 }
