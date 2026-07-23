@@ -22,14 +22,14 @@ int main(int argc, char** argv) {
     std::list<int> valuesList;
 
     if (argc < 2) {
-        std::cerr << "Error" << std::endl;
+        std::cerr << "Error not enough arguments" << std::endl;
         return 1;
     }
 
     for (int i = 1; i < argc; ++i) {
         int value = 0;
         if (!parsePositiveInt(argv[i], value)) {
-            std::cerr << "Error" << std::endl;
+            std::cerr << "Error during the conversion of arguments to numbers" << std::endl;
             return 1;
         }
         values.push_back(value);
