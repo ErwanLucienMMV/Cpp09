@@ -443,16 +443,23 @@ std::deque<std::size_t> PmergeMe::QjacobsthalOrder(std::size_t size)
     return order;
 }
 
-void PmergeMe::insertSorted(std::deque<QElement*>& chain, QElement* element)
+bool compareQValue(QElement* a, QElement* b)
 {
-    std::deque<QElement*>::iterator pos = chain.begin();
+    return *(a->value) < *(b->value);
+}
 
+void PmergeMe::insertSorted(
+    std::deque<QElement*>& chain,
+    QElement* element)
+{
+    std::deque<QElement*>::iterator pos;
 
-    while (pos != chain.end() &&
-           *(*pos)->value < *element->value)
-    {
-        ++pos;
-    }
+    pos = std::lower_bound(
+        chain.begin(),
+        chain.end(),
+        element,
+        compareQValue
+    );
 
     chain.insert(pos, element);
 }
