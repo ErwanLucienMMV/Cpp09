@@ -4,7 +4,8 @@ YELLOW = \033[0;33m
 RESET = \033[0m
 
 SRC = src/main.cpp \
-	  src/Date.cpp
+	  src/Date.cpp \
+	  src/BitcoinExchange.cpp
 
 NAME = btc
 

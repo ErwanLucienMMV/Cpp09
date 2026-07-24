@@ -1,3 +1,4 @@
+#include "BitcoinExchange.hpp"
 #include "Date.hpp"
 #include <map>
 #include <iostream>
@@ -123,6 +124,7 @@ std::map<Date, float> parseDataBase(void)
 			catch (std::exception &e)
 			{
 				std::cout << "Database file contained anormal data, exiting the program" << std::endl;
+				myfile.close();
 				exit(1);
 			}
 		}
@@ -141,6 +143,12 @@ void processInputFile(const std::string &filename, const std::map<Date, float> &
 	std::ifstream input(filename.c_str());
 	std::string line;
 	bool headerSkipped = false;
+
+	if (data.size() < 1)
+	{
+		std::cout << "Invalid argument, database was empty" << std::endl;
+		return ;
+	}
 
 	if (!input.is_open())
 	{
@@ -231,8 +239,9 @@ int main(int argc, char **argv)
 		return (1);
 	}
 
-	std::map<Date, float> data = parseDataBase();
-	processInputFile(argv[1], data);
+	BitcoinExchange exchange;
+	exchange.setData(parseDataBase());
+	processInputFile(argv[1], exchange.getData());
 	
 	return (0);
 }
