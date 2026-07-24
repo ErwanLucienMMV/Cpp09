@@ -70,4 +70,20 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
     return os;
 }
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::deque<T>& vec)
+{
+    for (typename std::deque<T>::const_iterator it = vec.begin();
+         it != vec.end();
+         ++it)
+    {
+        if (it != vec.begin())
+            os << " ";
+
+        os << *it;
+    }
+	os << "\nNombre d'elements: " << vec.size();
+    return os;
+}
+
 #endif

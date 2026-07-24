@@ -479,13 +479,13 @@ void PmergeMe::fordJohnsonInsert(
 
 void PmergeMe::buildResult(std::deque<QElement*>& mainChain)
 {
-    this->resVec.clear();
+    this->resdeq.clear();
 
     for (std::deque<QElement*>::iterator it = mainChain.begin();
          it != mainChain.end();
          ++it)
     {
-        this->resVec.push_back(*((*it)->value));
+        this->resdeq.push_back(*((*it)->value));
     }
 }
 
@@ -555,6 +555,6 @@ void PmergeMe::sort()
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
-	std::cout << "Time to sort with deque: " << elapsed * 1000000 << " us" << std::endl;
+	std::cout << "Time to sort with deque: " << elapsed * 1000000 << " us" << "\n" << resdeq << std::endl;
 	}
 }
