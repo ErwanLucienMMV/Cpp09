@@ -8,9 +8,7 @@
 struct VElement
 {
     std::vector<int>::const_iterator value;
-
     VElement* looser;
-
     std::vector<VElement*> defeated;
 };
 
@@ -58,7 +56,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 
         os << *it;
     }
-
+	os << "\nNombre d'elements: " << vec.size();
     return os;
 }
 

@@ -129,34 +129,59 @@ std::vector<std::size_t> PmergeMe::jacobsthalOrder(std::size_t size)
 
     if (size == 0)
         return order;
-
+    order.push_back(0);
+	
     std::vector<std::size_t> jacob;
 
-    jacob.push_back(0);
     jacob.push_back(1);
+    jacob.push_back(3);
 
     while (jacob.back() < size)
     {
         std::size_t n = jacob.size();
-
         jacob.push_back(jacob[n - 1] + 2 * jacob[n - 2]);
     }
 
 
     std::size_t previous = 1;
 
-    for (std::size_t i = 2; i < jacob.size(); i++)
+    for (std::size_t i = 1; i < jacob.size(); ++i)
     {
-        std::size_t limit = jacob[i];
+        std::size_t current = jacob[i];
 
-        while (limit > previous && limit <= size)
+        if (current > size)
+            current = size;
+
+        // insérer en descendant dans le groupe
+        for (std::size_t j = current; j > previous; --j)
         {
-            order.push_back(limit - 1);
-            limit--;
+            order.push_back(j - 1);
         }
 
-        previous = jacob[i];
+        previous = current;
+
+        if (previous == size)
+            break;
     }
+
+	//les elements qui disparaissaient
+    for (std::size_t i = 0; i < size; ++i)
+    {
+        bool found = false;
+
+        for (std::size_t j = 0; j < order.size(); ++j)
+        {
+            if (order[j] == i)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            order.push_back(i);
+    }
+
 
     return order;
 }
@@ -175,28 +200,16 @@ void PmergeMe::insertSorted(std::vector<VElement*>& chain, VElement* element)
     chain.insert(pos, element);
 }
 
-void PmergeMe::fordJohnsonInsert(std::vector<VElement*>& mainChain, std::vector<VElement*>& pending)
+void PmergeMe::fordJohnsonInsert(
+    std::vector<VElement*>& mainChain,
+    std::vector<VElement*>& pending)
 {
-    if (pending.empty())
-        return;
-
-
-    insertSorted(mainChain, pending[0]);
-
-
     std::vector<std::size_t> order =
         jacobsthalOrder(pending.size());
 
-
-    for (std::size_t i = 0; i < order.size(); i++)
+    for (std::size_t i = 0; i < order.size(); ++i)
     {
-        std::size_t index = order[i];
-
-
-        if (index < pending.size())
-        {
-            insertSorted(mainChain, pending[index]);
-        }
+        insertSorted(mainChain, pending[order[i]]);
     }
 }
 
@@ -236,16 +249,46 @@ bool isSorted(const std::vector<int>& vec)
     return true;
 }
 
+//List sorting
+
+bool isSorted(const std::list<int>& list)
+{
+    if (list.size() < 2)
+        return true;
+
+    std::list<int>::const_iterator it = list.begin();
+    std::list<int>::const_iterator next = it;
+    ++next;
+
+    std::size_t index = 0;
+
+    while (next != list.end())
+    {
+        if (*it > *next)
+        {
+            std::cout << "BROKEN AT INDEX "
+                      << index
+                      << ": "
+                      << *it
+                      << " > "
+                      << *next
+                      << std::endl;
+
+            return false;
+        }
+
+        ++it;
+        ++next;
+        ++index;
+    }
+
+    return true;
+}
+
 void PmergeMe::sort()
 {
     std::cout << "Before: ";
-    for (std::vector<int>::const_iterator it = Vec.begin(); it != Vec.end(); ++it) {
-        if (it != Vec.begin()) {
-            std::cout << ' ';
-        }
-        std::cout << *it;
-    }
-    std::cout << std::endl;
+    std::cout << Vec << std::endl;
 	
 	//Vec sorting
 	{
@@ -285,11 +328,13 @@ void PmergeMe::sort()
 	std::cout << "Time to sort: " << elapsed * 1000000 << " us" << std::endl;
 	}
 	//List sorting
+	{
 	clock_t start = clock();
-	
+
 	clock_t end = clock();
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
 	std::cout << "Time to sort: " << elapsed * 1000000 << " us" << std::endl;
+	}
 }
