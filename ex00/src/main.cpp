@@ -201,6 +201,11 @@ void processInputFile(const std::string &filename, const std::map<Date, float> &
 		std::map<Date, float>::const_iterator closest = data.end();
 		for (; it != data.end(); ++it)
 		{
+			if (inputDate < data.begin()->first)
+			{
+				std::cout << inputDate << " => " << "-42" << " = " << "-42" << std::endl;
+				break ;
+			}
 			if (sameDate(it->first, inputDate))
 			{
 				closest = it;
