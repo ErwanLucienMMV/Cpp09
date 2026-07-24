@@ -40,6 +40,7 @@ std::vector<VElement*> PmergeMe::Pairing(std::vector<VElement*>& current)
         {
             // first wins
             first->looser = second;
+			second->winner = first;
 
             first->defeated.push_back(second);
 
@@ -57,6 +58,7 @@ std::vector<VElement*> PmergeMe::Pairing(std::vector<VElement*>& current)
         {
             // second wins
             second->looser = first;
+			first->winner = second;
 
             second->defeated.push_back(first);
 
@@ -297,6 +299,7 @@ std::deque<QElement*> PmergeMe::Pairing(std::deque<QElement*>& current)
         {
             // first wins
             first->looser = second;
+			second->winner = first;
 
             first->defeated.push_back(second);
 
@@ -314,6 +317,7 @@ std::deque<QElement*> PmergeMe::Pairing(std::deque<QElement*>& current)
         {
             // second wins
             second->looser = first;
+			first->winner = second;
 
             second->defeated.push_back(first);
 
@@ -452,14 +456,21 @@ void PmergeMe::insertSorted(
     std::deque<QElement*>& chain,
     QElement* element)
 {
-    std::deque<QElement*>::iterator pos;
+    std::deque<QElement*>::iterator upper;
 
-    pos = std::lower_bound(
+    upper = std::find(
         chain.begin(),
         chain.end(),
-        element,
-        compareQValue
+        element->winner
     );
+
+    std::deque<QElement*>::iterator pos =
+        std::lower_bound(
+            chain.begin(),
+            upper,
+            element,
+            compareQValue
+        );
 
     chain.insert(pos, element);
 }
@@ -537,6 +548,7 @@ void PmergeMe::sort()
     {
         pairs[i].value = vecIt;
 		pairs[i].looser = NULL;
+		pairs[i].winner = NULL;
     }
 	std::deque<QElement*> current;
 	for (std::size_t i = 0; i < pairs.size(); i++)

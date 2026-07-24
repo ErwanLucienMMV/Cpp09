@@ -10,6 +10,7 @@
 struct VElement
 {
     std::vector<int>::const_iterator value;
+	VElement* winner;
     VElement* looser;
     std::vector<VElement*> defeated;
 };
@@ -17,6 +18,7 @@ struct VElement
 struct QElement
 {
 	std::deque<int>::const_iterator value;
+	QElement* winner;
 	QElement* looser;
     std::deque<QElement*> defeated;
 } ;
