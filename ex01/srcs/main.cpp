@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stack>
 #include <queue>
-#include <deque>
+#include <list>
 #include <cctype>
 #include <string>
 
@@ -46,7 +46,7 @@ float doOPeration(char symbol, float first, float second)
 
 int main(int argc, char **argv)
 {
-	std::stack< float, std::deque<float> > digits;
+	std::stack< float, std::list<float> > digits;
 	float res = 0;
 
 	if (argc != 2)

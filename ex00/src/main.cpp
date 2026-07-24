@@ -203,7 +203,7 @@ void processInputFile(const std::string &filename, const std::map<Date, float> &
 		{
 			if (inputDate < data.begin()->first)
 			{
-				std::cout << inputDate << " => " << "-42" << " = " << "-42" << std::endl;
+				std::cout << "Before: "<< dateToken << " => " << "-42" << " = " << "-42 (satoshi hadn't published the paper yet)" << std::endl;
 				break ;
 			}
 			if (sameDate(it->first, inputDate))
