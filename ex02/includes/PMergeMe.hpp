@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <deque>
+#include <algorithm>
 
 struct VElement
 {

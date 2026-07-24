@@ -186,16 +186,23 @@ std::vector<std::size_t> PmergeMe::jacobsthalOrder(std::size_t size)
     return order;
 }
 
-void PmergeMe::insertSorted(std::vector<VElement*>& chain, VElement* element)
+bool compareValue(VElement* a, VElement* b)
 {
-    std::vector<VElement*>::iterator pos = chain.begin();
+    return *(a->value) < *(b->value);
+}
 
+void PmergeMe::insertSorted(
+    std::vector<VElement*>& chain,
+    VElement* element)
+{
+    std::vector<VElement*>::iterator pos;
 
-    while (pos != chain.end() &&
-           *(*pos)->value < *element->value)
-    {
-        ++pos;
-    }
+    pos = std::lower_bound(
+        chain.begin(),
+        chain.end(),
+        element,
+        compareValue
+    );
 
     chain.insert(pos, element);
 }
@@ -482,7 +489,6 @@ void PmergeMe::sort()
 	
 	//Vec sorting
 	{
-	clock_t start = clock();
 
 	std::vector<VElement> pairs(this->Vec.size());
 
@@ -492,30 +498,29 @@ void PmergeMe::sort()
     {
         pairs[i].value = vecIt;
 		pairs[i].looser = NULL;
-		pairs[i].defeated.clear();
     }
 	std::vector<VElement*> current;
 	for (std::size_t i = 0; i < pairs.size(); i++)
 	{
     	current.push_back(&pairs[i]);
 	}
-	VElement* winner = TournamentBracket(current);
 	std::vector<VElement*> mainChain;
 	std::vector<VElement*> pending;
 
+
+	clock_t start = clock();
+	VElement* winner = TournamentBracket(current);
 	extractChain(winner, mainChain, pending);
 	fordJohnsonInsert(mainChain, pending);
 	buildResult(mainChain);
-	std::cout << "Sorted result: " << resVec << std::endl;
     clock_t end = clock();
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
-
-	std::cout << "Time to sort: " << elapsed * 1000000 << " us" << std::endl;
+	std::cout << "Sorted result: " << resVec << std::endl;
+	std::cout << "Time to sort with vector: " << elapsed * 1000000 << " us" << std::endl;
 	}
 	//deque sorting
 	{
-	clock_t start = clock();
 
 	std::deque<QElement> pairs(this->deq.size());
 
@@ -525,25 +530,24 @@ void PmergeMe::sort()
     {
         pairs[i].value = vecIt;
 		pairs[i].looser = NULL;
-		pairs[i].defeated.clear();
     }
 	std::deque<QElement*> current;
 	for (std::size_t i = 0; i < pairs.size(); i++)
 	{
     	current.push_back(&pairs[i]);
 	}
-	QElement* winner = TournamentBracket(current);
 	std::deque<QElement*> mainChain;
 	std::deque<QElement*> pending;
-
+	
+	clock_t start = clock();
+	QElement* winner = TournamentBracket(current);
 	extractChain(winner, mainChain, pending);
 	fordJohnsonInsert(mainChain, pending);
 	buildResult(mainChain);
-
 	clock_t end = clock();
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
-	std::cout << "Time to sort: " << elapsed * 1000000 << " us" << std::endl;
+	std::cout << "Time to sort with deque: " << elapsed * 1000000 << " us" << std::endl;
 	}
 }
