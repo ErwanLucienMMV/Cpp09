@@ -197,14 +197,21 @@ void PmergeMe::insertSorted(
     std::vector<VElement*>& chain,
     VElement* element)
 {
-    std::vector<VElement*>::iterator pos;
+    std::vector<VElement*>::iterator upper;
 
-    pos = std::lower_bound(
+    upper = std::find(
         chain.begin(),
         chain.end(),
-        element,
-        compareValue
+        element->winner
     );
+
+    std::vector<VElement*>::iterator pos =
+        std::lower_bound(
+            chain.begin(),
+            upper,
+            element,
+            compareValue
+        );
 
     chain.insert(pos, element);
 }
