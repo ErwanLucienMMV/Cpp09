@@ -19,7 +19,7 @@ static bool parsePositiveInt(const std::string& token, int& value) {
 
 int main(int argc, char** argv) {
     std::vector<int> values;
-    std::list<int> valuesList;
+    std::deque<int> valuesList;
 
     if (argc < 2) {
         std::cerr << "Error not enough arguments" << std::endl;
