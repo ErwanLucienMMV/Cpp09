@@ -2,6 +2,9 @@
 
 #include <ctime>
 #include <iostream>
+#include <cmath>
+
+long compA = 0;
 
 //Orthodox canonical form part
 
@@ -9,7 +12,8 @@ PmergeMe::PmergeMe()
     : Vec(), deq(), resVec(), resdeq() {}
 
 PmergeMe::PmergeMe(const std::vector<int>& vec, const std::deque<int>& lis)
-    : Vec(vec), deq(lis), resVec(), resdeq() {}
+    : Vec(vec), deq(lis), resVec(), resdeq() {
+    }
 
 PmergeMe::PmergeMe(const PmergeMe& other)
     : Vec(other.Vec), deq(other.deq), resVec(other.resVec), resdeq(other.resdeq) {}
@@ -35,7 +39,7 @@ std::vector<VElement*> PmergeMe::Pairing(std::vector<VElement*>& current)
         VElement* first = current[i];
         VElement* second = current[i + 1];
 
-
+        compA += 1;
         if (*(first->value) >= *(second->value))
         {
             // first wins
@@ -190,6 +194,7 @@ std::vector<std::size_t> PmergeMe::jacobsthalOrder(std::size_t size)
 
 bool compareValue(VElement* a, VElement* b)
 {
+    compA +=1;
     return *(a->value) < *(b->value);
 }
 
@@ -507,6 +512,16 @@ void PmergeMe::buildResult(std::deque<QElement*>& mainChain)
     }
 }
 
+unsigned long expectedComparisons(unsigned int n)
+{
+    unsigned long comparisons = 0;
+
+    for (unsigned int k = 1; k <= n; ++k)
+        comparisons += (unsigned long)std::ceil(std::log((3 * k) / 4.0) / std::log(2));
+
+    return comparisons;
+}
+
 void PmergeMe::sort()
 {
     std::cout << "Before: ";
@@ -574,6 +589,8 @@ void PmergeMe::sort()
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
+    unsigned long numberofcomp = expectedComparisons(Vec.size());
 	std::cout << "Time to sort with deque: " << elapsed * 1000000 << " us" << "\n" << resdeq << std::endl;
+    std::cout << "Number of comparison: " << compA << " expected on average: " << numberofcomp <<std::endl;
 	}
 }
