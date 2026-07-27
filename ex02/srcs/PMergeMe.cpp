@@ -590,7 +590,9 @@ void PmergeMe::sort()
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
     unsigned long numberofcomp = expectedComparisons(Vec.size());
+	float percentdiff = ((double)compA / numberofcomp - 1) * 100;
 	std::cout << "Time to sort with deque: " << elapsed * 1000000 << " us" << "\n" << resdeq << std::endl;
-    std::cout << "Number of comparison: " << compA << " expected on average: " << numberofcomp <<std::endl;
+    std::cout << "Number of comparison: " << compA << " expected at best: " << numberofcomp << std::endl;
+	std::cout << "Actual diff with best possible result: " << percentdiff << "%" <<std::endl;
 	}
 }
