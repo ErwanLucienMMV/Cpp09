@@ -165,14 +165,19 @@ void processInputFile(const std::string &filename, const std::map<Date, float> &
 		if (!headerSkipped)
 		{
 			headerSkipped = true;
-			if (trimmedLine.find("date") != std::string::npos && trimmedLine.find("value") != std::string::npos)
+			if (trimmedLine.find("date | value") != std::string::npos)
 				continue;
+			else
+			{
+				std::cout << "Invalid header file, the file will still be processed cause the subjects asked to keep on going even on a bad line" << std::endl;
+				continue ;
+			}
 		}
 		std::stringstream lineStream(trimmedLine);
 		std::string dateToken;
 		std::string valueToken;
 
-		if (!std::getline(lineStream, dateToken, '|') || !std::getline(lineStream, valueToken, '|'))
+		if (!std::getline(lineStream, dateToken, '|') || !std::getline(lineStream, valueToken))
 		{
 			std::cout << "Error: bad input => " << trimmedLine << std::endl;
 			continue;
