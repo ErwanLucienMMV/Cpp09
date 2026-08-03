@@ -125,7 +125,8 @@ std::map<Date, float> parseDataBase(void)
 			{
 				std::cout << "Database file contained anormal data, exiting the program" << std::endl;
 				myfile.close();
-				exit(1);
+				std::map<Date, float> errres;
+				return (errres);
 			}
 		}
 		myfile.close();
@@ -134,7 +135,7 @@ std::map<Date, float> parseDataBase(void)
 	else
 	{
 		std::cout << "Database file was not found, exiting the program" << std::endl;
-		exit(1);
+		return (res);
 	}
 }
 
@@ -239,9 +240,16 @@ int main(int argc, char **argv)
 		return (1);
 	}
 
-	BitcoinExchange exchange;
-	exchange.setData(parseDataBase());
-	processInputFile(argv[1], exchange.getData());
+	try 
+	{
+		BitcoinExchange exchange;
+		exchange.setData(parseDataBase());
+		processInputFile(argv[1], exchange.getData());
+	}
+	catch (std::exception &e)
+	{
+		return (1);
+	}
 	
 	return (0);
 }

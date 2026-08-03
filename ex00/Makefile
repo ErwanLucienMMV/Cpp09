@@ -11,7 +11,7 @@ NAME = btc
 
 OBJ = $(SRC:.cpp=.o)
 
-FLAGS = -std=c++98 -Wall -Werror -Wextra -Iincludes
+FLAGS = -std=c++98 -Wall -Werror -Wextra -Iincludes -g
 
 CXX = c++
 
