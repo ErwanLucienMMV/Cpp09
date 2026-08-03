@@ -4,8 +4,6 @@
 #include <iostream>
 #include <cmath>
 
-long compA = 0;
-
 //Orthodox canonical form part
 
 PmergeMe::PmergeMe()
@@ -30,220 +28,190 @@ PmergeMe::~PmergeMe() {}
 
 //Sorting part
 
-std::vector<VElement*> PmergeMe::Pairing(std::vector<VElement*>& current)
+int compA = 0;
+
+struct Item
 {
-    std::vector<VElement*> winners;
+    int value;
+    int id;
 
-    for (std::size_t i = 0; i + 1 < current.size(); i += 2)
+    Item() : value(0), id(-1) {}
+    Item(int v, int i) : value(v), id(i) {}
+};
+
+struct Pair
+{
+    Item low;
+    Item high;
+
+    Pair(const Item& first, const Item& second)
     {
-        VElement* first = current[i];
-        VElement* second = current[i + 1];
-
-        compA += 1;
-        if (*(first->value) >= *(second->value))
+        compA+=1;
+        if (first.value <= second.value)
         {
-            // first wins
-            first->looser = second;
-			second->winner = first;
-
-            first->defeated.push_back(second);
-
-            // absorb second's history
-            for (std::vector<VElement*>::iterator it = second->defeated.begin();
-                 it != second->defeated.end();
-                 ++it)
-            {
-                first->defeated.push_back(*it);
-            }
-
-            winners.push_back(first);
+            low = first;
+            high = second;
         }
         else
         {
-            // second wins
-            second->looser = first;
-			first->winner = second;
+            low = second;
+            high = first;
+        }
+    }
+};
 
-            second->defeated.push_back(first);
+static int lowerBound(const std::vector<Item>& values, int end, int value)
+{
+    int left = 0;
+    int right = end;
 
-            // absorb first's history
-            for (std::vector<VElement*>::iterator it = first->defeated.begin();
-                 it != first->defeated.end();
-                 ++it)
+    while (left < right)
+    {
+        compA +=1;
+        int middle = left + (right - left) / 2;
+
+        if (values[middle].value < value)
+            left = middle + 1;
+        else
+            right = middle;
+    }
+    return left;
+}
+
+static int findPositionById(const std::vector<Item>& values, int id)
+{
+    std::size_t i = 0;
+
+    while (i < values.size())
+    {
+        if (values[i].id == id)
+            return static_cast<int>(i);
+        ++i;
+    }
+    return -1;
+}
+
+static Item findLowForHigh(const std::vector<Pair>& pairs, int highId)
+{
+    std::size_t i = 0;
+
+    while (i < pairs.size())
+    {
+        if (pairs[i].high.id == highId)
+            return pairs[i].low;
+        ++i;
+    }
+
+    // never reached just for the flags
+    return Item(0, -1);
+}
+
+static void insertBeforePartner(std::vector<Item>& chain,
+                                const Item& item,
+                                int partnerId)
+{
+    int partnerPosition = findPositionById(chain, partnerId);
+    int insertPosition;
+
+    if (partnerPosition < 0)
+        partnerPosition = static_cast<int>(chain.size());
+
+    insertPosition = lowerBound(chain, partnerPosition, item.value);
+    chain.insert(chain.begin() + insertPosition, item);
+}
+
+static std::vector<Item> fordJohnsonItems(const std::vector<Item>& input)
+{
+    std::vector<Pair> pairs;
+    std::vector<Item> maxima;
+    std::vector<Item> sortedMaxima;
+    std::vector<Item> chain;
+    bool hasOdd;
+    Item odd;
+    std::size_t pairCount;
+    std::size_t i;
+
+    if (input.size() <= 1)
+        return input;
+
+    hasOdd = (input.size() % 2 != 0);
+    pairCount = input.size() / 2;
+
+    if (hasOdd)
+        odd = input[input.size() - 1];
+
+    // pairing
+    for (i = 0; i < pairCount; ++i)
+    {
+        Pair pair(input[i * 2], input[i * 2 + 1]);
+
+        pairs.push_back(pair);
+        maxima.push_back(pair.high);
+    }
+
+    // Recursively sort the maxima.
+    sortedMaxima = fordJohnsonItems(maxima);
+
+    // Begin with b1, a1.
+   // Start with b1, followed by ALL sorted maxima: b1, a1, a2 cause it will be my two base bounds
+chain.push_back(findLowForHigh(pairs, sortedMaxima[0].id));
+
+for (i = 0; i < sortedMaxima.size(); ++i)
+{
+    chain.push_back(sortedMaxima[i]);
+}
+    {
+        std::size_t previousBoundary = 1;
+        std::size_t boundary = 3;
+
+        while (previousBoundary < pairCount)
+        {
+            std::size_t current = boundary;
+
+            if (current > pairCount)
+                current = pairCount;
+
+            while (current > previousBoundary)
             {
-                second->defeated.push_back(*it);
+                Item high = sortedMaxima[current - 1];
+                Item low = findLowForHigh(pairs, high.id);
+
+                insertBeforePartner(chain, low, high.id);
+                --current;
             }
 
-            winners.push_back(second);
+            previousBoundary = boundary;
+            boundary = boundary * 2 + 1;
         }
     }
 
-
-    // odd element
-    if (current.size() % 2)
-        winners.push_back(current.back());
-
-    return winners;
-}
-
-VElement* PmergeMe::TournamentBracket(std::vector<VElement*>& current)
-{
-	if (current.empty())
-    	return NULL;
-
-	if (current.size() == 2)
-	{
-    		std::vector<VElement*> winners = Pairing(current);
-    		return winners[0];
-	}
-    else if (current.size() == 1)
-        return current[0];
-
-    std::vector<VElement*> winners = Pairing(current);
-
-    return TournamentBracket(winners);
-}
-
-void PmergeMe::extractChain(
-    VElement* winner,
-    std::vector<VElement*>& mainChain,
-    std::vector<VElement*>& pending)
-{
-    if (!winner)
-        return;
-
-
-    mainChain.push_back(winner);
-
-
-    if (winner->looser)
-        pending.push_back(winner->looser);
-
-
-    for (std::vector<VElement*>::iterator it = winner->defeated.begin();
-         it != winner->defeated.end();
-         ++it)
+    if (hasOdd)
     {
-        if (*it != winner->looser)
-            pending.push_back(*it);
-    }
-}
-
-std::vector<std::size_t> PmergeMe::jacobsthalOrder(std::size_t size)
-{
-    std::vector<std::size_t> order;
-
-    if (size == 0)
-        return order;
-    order.push_back(0);
-	
-    std::vector<std::size_t> jacob;
-
-    jacob.push_back(1);
-    jacob.push_back(3);
-
-    while (jacob.back() < size)
-    {
-        std::size_t n = jacob.size();
-        jacob.push_back(jacob[n - 1] + 2 * jacob[n - 2]);
-    }
-
-
-    std::size_t previous = 1;
-
-    for (std::size_t i = 1; i < jacob.size(); ++i)
-    {
-        std::size_t current = jacob[i];
-
-        if (current > size)
-            current = size;
-
-        // insérer en descendant dans le groupe
-        for (std::size_t j = current; j > previous; --j)
-        {
-            order.push_back(j - 1);
-        }
-
-        previous = current;
-
-        if (previous == size)
-            break;
-    }
-
-	//les elements qui disparaissaient
-    for (std::size_t i = 0; i < size; ++i)
-    {
-        bool found = false;
-
-        for (std::size_t j = 0; j < order.size(); ++j)
-        {
-            if (order[j] == i)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-            order.push_back(i);
-    }
-
-
-    return order;
-}
-
-bool compareValue(VElement* a, VElement* b)
-{
-    compA +=1;
-    return *(a->value) < *(b->value);
-}
-
-void PmergeMe::insertSorted(
-    std::vector<VElement*>& chain,
-    VElement* element)
-{
-    std::vector<VElement*>::iterator upper;
-
-    upper = std::find(
-        chain.begin(),
-        chain.end(),
-        element->winner
-    );
-
-    std::vector<VElement*>::iterator pos =
-        std::lower_bound(
-            chain.begin(),
-            upper,
-            element,
-            compareValue
+        int position = lowerBound(
+            chain,
+            static_cast<int>(chain.size()),
+            odd.value
         );
 
-    chain.insert(pos, element);
+        chain.insert(chain.begin() + position, odd);
+    }
+
+    return chain;
 }
 
-void PmergeMe::fordJohnsonInsert(
-    std::vector<VElement*>& mainChain,
-    std::vector<VElement*>& pending)
+void fordJohnsonSort(const std::vector<int>& values, std::vector<int>& resVec)
 {
-    std::vector<std::size_t> order =
-        jacobsthalOrder(pending.size());
+    std::vector<Item> items;
+    std::vector<Item> sorted;
+    std::size_t i;
 
-    for (std::size_t i = 0; i < order.size(); ++i)
-    {
-        insertSorted(mainChain, pending[order[i]]);
-    }
-}
+    for (i = 0; i < values.size(); ++i)
+        items.push_back(Item(values[i], static_cast<int>(i)));
 
-void PmergeMe::buildResult(std::vector<VElement*>& mainChain)
-{
-    this->resVec.clear();
+    sorted = fordJohnsonItems(items);
 
-    for (std::vector<VElement*>::iterator it = mainChain.begin();
-         it != mainChain.end();
-         ++it)
-    {
-        this->resVec.push_back(*((*it)->value));
-    }
+	for (i = 0; i < values.size(); ++i) 
+		resVec.push_back(sorted[i].value);
 }
 
 bool isSorted(const std::vector<int>& vec)
@@ -272,6 +240,163 @@ bool isSorted(const std::vector<int>& vec)
 
 //deque sorting
 
+static int lowerBound(const std::deque<Item>& values, int end, int value)
+{
+    int left = 0;
+    int right = end;
+
+    while (left < right)
+    {
+        int middle = left + (right - left) / 2;
+
+        if (values[middle].value < value)
+            left = middle + 1;
+        else
+            right = middle;
+    }
+    return left;
+}
+
+static int findPositionById(const std::deque<Item>& values, int id)
+{
+    std::size_t i = 0;
+
+    while (i < values.size())
+    {
+        if (values[i].id == id)
+            return static_cast<int>(i);
+        ++i;
+    }
+    return -1;
+}
+
+static Item findLowForHigh(const std::deque<Pair>& pairs, int highId)
+{
+    std::size_t i = 0;
+
+    while (i < pairs.size())
+    {
+        if (pairs[i].high.id == highId)
+            return pairs[i].low;
+        ++i;
+    }
+    return Item(0, -1);
+}
+
+static void insertBeforePartner(std::deque<Item>& chain,
+                                const Item& item,
+                                int partnerId)
+{
+    int partnerPosition = findPositionById(chain, partnerId);
+    int insertPosition;
+
+    if (partnerPosition < 0)
+        partnerPosition = static_cast<int>(chain.size());
+
+    insertPosition = lowerBound(chain, partnerPosition, item.value);
+    chain.insert(chain.begin() + insertPosition, item);
+}
+
+static std::deque<Item> fordJohnsonItems(const std::deque<Item>& input)
+{
+    std::deque<Pair> pairs;
+    std::deque<Item> maxima;
+    std::deque<Item> sortedMaxima;
+    std::deque<Item> chain;
+    bool hasOdd;
+    Item odd;
+    std::size_t pairCount;
+    std::size_t i;
+
+    if (input.size() <= 1)
+        return input;
+
+    hasOdd = (input.size() % 2 != 0);
+    pairCount = input.size() / 2;
+
+    if (hasOdd)
+        odd = input[input.size() - 1];
+
+    // Create pairs where low.value <= high.value.
+    for (i = 0; i < pairCount; ++i)
+    {
+        Pair pair(input[i * 2], input[i * 2 + 1]);
+
+        pairs.push_back(pair);
+        maxima.push_back(pair.high);
+    }
+
+    // Recursively sort all maximum values.
+    sortedMaxima = fordJohnsonItems(maxima);
+
+    /*
+     * Initial chain:
+     * b1, a1, a2, a3, ...
+     */
+    chain.push_back(findLowForHigh(pairs, sortedMaxima[0].id));
+
+    for (i = 0; i < sortedMaxima.size(); ++i)
+        chain.push_back(sortedMaxima[i]);
+
+    /*
+     * Insert remaining small values in Jacobsthal order:
+     * 3, 2, 5, 4, 11, 10, 9, 8, 7, 6, ...
+     */
+    {
+        std::size_t previousBoundary = 1;
+        std::size_t boundary = 3;
+
+        while (previousBoundary < pairCount)
+        {
+            std::size_t current = boundary;
+
+            if (current > pairCount)
+                current = pairCount;
+
+            while (current > previousBoundary)
+            {
+                Item high = sortedMaxima[current - 1];
+                Item low = findLowForHigh(pairs, high.id);
+
+                insertBeforePartner(chain, low, high.id);
+                --current;
+            }
+
+            previousBoundary = boundary;
+            boundary = boundary * 2 + 1;
+        }
+    }
+
+    // Insert the unpaired value, if there is one.
+    if (hasOdd)
+    {
+        int position = lowerBound(
+            chain,
+            static_cast<int>(chain.size()),
+            odd.value
+        );
+
+        chain.insert(chain.begin() + position, odd);
+    }
+
+    return chain;
+}
+
+void fordJohnsonSort(const std::deque<int>& values, std::deque<int>& resDeq)
+{
+    std::deque<Item> items;
+    std::deque<Item> sorted;
+    std::size_t i;
+
+    for (i = 0; i < values.size(); ++i)
+        items.push_back(Item(values[i], static_cast<int>(i)));
+
+    sorted = fordJohnsonItems(items);
+
+    for (i = 0; i < values.size(); ++i)
+    	resDeq.push_back(sorted[i].value);
+}
+
 bool isSorted(const std::deque<int>& deque)
 {
     if (deque.size() < 2)
@@ -297,220 +422,6 @@ bool isSorted(const std::deque<int>& deque)
 }
 
 
-std::deque<QElement*> PmergeMe::Pairing(std::deque<QElement*>& current)
-{
-    std::deque<QElement*> winners;
-
-    for (std::size_t i = 0; i + 1 < current.size(); i += 2)
-    {
-        QElement* first = current[i];
-        QElement* second = current[i + 1];
-
-
-        if (*(first->value) >= *(second->value))
-        {
-            // first wins
-            first->looser = second;
-			second->winner = first;
-
-            first->defeated.push_back(second);
-
-            // absorb second's history
-            for (std::deque<QElement*>::iterator it = second->defeated.begin();
-                 it != second->defeated.end();
-                 ++it)
-            {
-                first->defeated.push_back(*it);
-            }
-
-            winners.push_back(first);
-        }
-        else
-        {
-            // second wins
-            second->looser = first;
-			first->winner = second;
-
-            second->defeated.push_back(first);
-
-            // absorb first's history
-            for (std::deque<QElement*>::iterator it = first->defeated.begin();
-                 it != first->defeated.end();
-                 ++it)
-            {
-                second->defeated.push_back(*it);
-            }
-
-            winners.push_back(second);
-        }
-    }
-
-
-    // odd element
-    if (current.size() % 2)
-        winners.push_back(current.back());
-
-    return winners;
-}
-
-QElement* PmergeMe::TournamentBracket(std::deque<QElement*>& current)
-{
-	if (current.empty())
-    	return NULL;
-
-	if (current.size() == 2)
-	{
-    		std::deque<QElement*> winners = Pairing(current);
-    		return winners[0];
-	}
-    else if (current.size() == 1)
-        return current[0];
-
-    std::deque<QElement*> winners = Pairing(current);
-
-    return TournamentBracket(winners);
-}
-
-void PmergeMe::extractChain(
-    QElement* winner,
-    std::deque<QElement*>& mainChain,
-    std::deque<QElement*>& pending)
-{
-    if (!winner)
-        return;
-
-
-    mainChain.push_back(winner);
-
-
-    if (winner->looser)
-        pending.push_back(winner->looser);
-
-
-    for (std::deque<QElement*>::iterator it = winner->defeated.begin();
-         it != winner->defeated.end();
-         ++it)
-    {
-        if (*it != winner->looser)
-            pending.push_back(*it);
-    }
-}
-
-std::deque<std::size_t> PmergeMe::QjacobsthalOrder(std::size_t size)
-{
-    std::deque<std::size_t> order;
-
-    if (size == 0)
-        return order;
-    order.push_back(0);
-	
-    std::deque<std::size_t> jacob;
-
-    jacob.push_back(1);
-    jacob.push_back(3);
-
-    while (jacob.back() < size)
-    {
-        std::size_t n = jacob.size();
-        jacob.push_back(jacob[n - 1] + 2 * jacob[n - 2]);
-    }
-
-
-    std::size_t previous = 1;
-
-    for (std::size_t i = 1; i < jacob.size(); ++i)
-    {
-        std::size_t current = jacob[i];
-
-        if (current > size)
-            current = size;
-
-        // insérer en descendant dans le groupe
-        for (std::size_t j = current; j > previous; --j)
-        {
-            order.push_back(j - 1);
-        }
-
-        previous = current;
-
-        if (previous == size)
-            break;
-    }
-
-	//les elements qui disparaissaient
-    for (std::size_t i = 0; i < size; ++i)
-    {
-        bool found = false;
-
-        for (std::size_t j = 0; j < order.size(); ++j)
-        {
-            if (order[j] == i)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-            order.push_back(i);
-    }
-
-
-    return order;
-}
-
-bool compareQValue(QElement* a, QElement* b)
-{
-    return *(a->value) < *(b->value);
-}
-
-void PmergeMe::insertSorted(
-    std::deque<QElement*>& chain,
-    QElement* element)
-{
-    std::deque<QElement*>::iterator upper;
-
-    upper = std::find(
-        chain.begin(),
-        chain.end(),
-        element->winner
-    );
-
-    std::deque<QElement*>::iterator pos =
-        std::lower_bound(
-            chain.begin(),
-            upper,
-            element,
-            compareQValue
-        );
-
-    chain.insert(pos, element);
-}
-
-void PmergeMe::fordJohnsonInsert(
-    std::deque<QElement*>& mainChain,
-    std::deque<QElement*>& pending)
-{
-    std::deque<std::size_t> order =
-        QjacobsthalOrder(pending.size());
-
-    for (std::size_t i = 0; i < order.size(); ++i)
-    {
-        insertSorted(mainChain, pending[order[i]]);
-    }
-}
-
-void PmergeMe::buildResult(std::deque<QElement*>& mainChain)
-{
-    this->resdeq.clear();
-
-    for (std::deque<QElement*>::iterator it = mainChain.begin();
-         it != mainChain.end();
-         ++it)
-    {
-        this->resdeq.push_back(*((*it)->value));
-    }
-}
 
 unsigned long expectedComparisons(unsigned int n)
 {
@@ -530,69 +441,31 @@ void PmergeMe::sort()
 	//Vec sorting
 	{
 
-	std::vector<VElement> pairs(this->Vec.size());
-
-	std::vector<int>::const_iterator vecIt = this->Vec.begin();
-
-    for (std::size_t i = 0; i < this->Vec.size(); i++, vecIt++)
-    {
-        pairs[i].value = vecIt;
-		pairs[i].looser = NULL;
-    }
-	std::vector<VElement*> current;
-	for (std::size_t i = 0; i < pairs.size(); i++)
-	{
-    	current.push_back(&pairs[i]);
-	}
-	std::vector<VElement*> mainChain;
-	std::vector<VElement*> pending;
+	
 
 
 	clock_t start = clock();
-	VElement* winner = TournamentBracket(current);
-	extractChain(winner, mainChain, pending);
-	fordJohnsonInsert(mainChain, pending);
-	buildResult(mainChain);
+	fordJohnsonSort(Vec, resVec);
     clock_t end = clock();
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Sorted result: " << resVec << std::endl;
 	std::cout << "Time to sort with vector: " << elapsed * 1000000 << " us" << std::endl;
+	unsigned long numberofcomp = expectedComparisons(Vec.size());
+	float percentdiff = ((double)compA / numberofcomp - 1) * 100;
+	std::cout << "Number of comparison: " << compA << " expected at best: " << numberofcomp << std::endl;
+	std::cout << "Actual diff with best possible result: " << percentdiff << "%" <<std::endl;
 	}
-	//deque sorting
+	// //deque sorting
 	{
 
-	std::deque<QElement> pairs(this->deq.size());
-
-	std::deque<int>::const_iterator vecIt = this->deq.begin();
-
-    for (std::size_t i = 0; i < this->deq.size(); i++, vecIt++)
-    {
-        pairs[i].value = vecIt;
-		pairs[i].looser = NULL;
-		pairs[i].winner = NULL;
-    }
-	std::deque<QElement*> current;
-	for (std::size_t i = 0; i < pairs.size(); i++)
-	{
-    	current.push_back(&pairs[i]);
-	}
-	std::deque<QElement*> mainChain;
-	std::deque<QElement*> pending;
 	
 	clock_t start = clock();
-	QElement* winner = TournamentBracket(current);
-	extractChain(winner, mainChain, pending);
-	fordJohnsonInsert(mainChain, pending);
-	buildResult(mainChain);
+	fordJohnsonSort(deq, resdeq);
 	clock_t end = clock();
 
 	double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
 
-    unsigned long numberofcomp = expectedComparisons(Vec.size());
-	float percentdiff = ((double)compA / numberofcomp - 1) * 100;
 	std::cout << "Time to sort with deque: " << elapsed * 1000000 << " us" << "\n" << resdeq << std::endl;
-    std::cout << "Number of comparison: " << compA << " expected at best: " << numberofcomp << std::endl;
-	std::cout << "Actual diff with best possible result: " << percentdiff << "%" <<std::endl;
 	}
 }
